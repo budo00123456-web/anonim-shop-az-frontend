@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="az" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <title>Profilim — ANONIM SHOP AZ</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+<div class="scanline-effect"></div>
+
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">
+    <span class="logo-bracket">[</span>ANONIM SHOP AZ<span class="logo-bracket">]</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">// FEED</a></li>
+    <li><a href="create.html">// PAYLAŞ</a></li>
+    <li><a href="messages.html">// MESAJLAR</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="theme-toggle" id="themeToggle"></button>
+    <a href="index.html" class="btn btn-ghost btn-sm">← Geri</a>
+  </div>
+</nav>
+
+<main class="main-content" style="margin-top:80px; max-width:700px; margin-left:auto; margin-right:auto;">
+
+  <div style="margin-bottom:2rem;">
+    <h1 style="font-family:'Share Tech Mono',monospace; color:var(--accent); font-size:1.2rem; letter-spacing:2px;">// PROFİL AYARLARI</h1>
+  </div>
+
+  <div id="pageContent">
+    <div class="page-loader"><div class="loader"></div></div>
+  </div>
+
+</main>
+
+<script src="config.js"></script>
+<script>
+if (!Auth.isLoggedIn()) window.location.href = 'login.html';
+
+const myUser = Auth.getUser();
+document.getElementById('themeToggle').onclick = () => Theme.toggle();
+
+(async () => {
+  // Load fresh profile
+  const res = await API.get('/api/users/me');
+  if (!res) return;
+  const { user } = await res.json();
+
+  document.getElementById('pageContent').innerHTML = `
+    <!-- Avatar section -->
+    <div class="card" style="margin-bottom:1.25rem;">
+      <h3 style="font-family:'Share Tech Mono',monospace; color:var(--accent); font-size:0.85rem; letter-spacing:1px; margin-bottom:1.25rem;">// AVATAR</h3>
+      <div style="display:flex; align-items:center; gap:1.5rem; flex-wrap:wrap;">
+        <div id="avatarPreview">
+          ${user.avatar_url
+            ? `<img class="avatar" id="avatarImg" width="80" height="80" src="${CONFIG.API_URL}${user.avatar_url}" alt="" style="width:80px;height:80px;">`
+            : `<div class="avatar-placeholder" style="width:80px;height:80px;font-size:1.75rem;">${user.username[0].toUpperCase()}</div>`
+          }
+        </div>
+        <div>
+          <label class="btn btn-secondary btn-sm" style="cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem;">
+            📷 Şəkil Yüklə
+            <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/webp" style="display:none;">
+          </label>
+          <p style="color:var(--text-muted); font-size:0.75rem; margin-top:0.5rem; font-family:'Share Tech Mono',monospace;">// Max 5MB · JPEG/PNG/WebP</p>
+          <div id="avatarStatus" style="font-size:0.8rem; margin-top:0.35rem;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bio section -->
+    <div class="card" style="margin-bottom:1.25rem;">
+      <h3 style="font-family:'Share Tech Mono',monospace; color:var(--accent); font-size:0.85rem; letter-spacing:1px; margin-bottom:1.25rem;">// BİO</h3>
+      <div class="form-group">
+        <label class="form-label">Haqqında</label>
+        <textarea class="form-textarea" id="bioInput" maxlength="500" placeholder="Özün haqqında qısa məlumat...">${escapeHtml(user.bio || '')}</textarea>
+        <div style="font-size:0.7rem; color:var(--text-muted); text-align:right; margin-top:0.2rem;" id="bioCount">${(user.bio || '').length}/500</div>
+      </div>
+      <button class="btn btn-primary btn-sm" id="saveBioBtn">Yadda Saxla</button>
+      <div id="bioStatus" style="font-size:0.8rem; margin-top:0.5rem;"></div>
+    </div>
+
+    <!-- Password section -->
+    <div class="card" style="margin-bottom:1.25rem;">
+      <h3 style="font-family:'Share Tech Mono',monospace; color:var(--accent); font-size:0.85rem; letter-spacing:1px; margin-bottom:1.25rem;">// ŞİFRƏ DƏYİŞ</h3>
+      <div class="form-group">
+        <label class="form-label">Mövcud Şifrə</label>
+        <input type="password" id="currentPwd" class="form-input" maxlength="128" autocomplete="current-password">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Yeni Şifrə</label>
+        <input type="password" id="newPwd" class="form-input" maxlength="128" minlength="6" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Yeni Şifrəni Təsdiqlə</label>
+        <input type="password" id="confirmPwd" class="form-input" maxlength="128" autocomplete="new-password">
+      </div>
+      <button class="btn btn-primary btn-sm" id="savePwdBtn">Şifrəni Yenilə</button>
+      <div id="pwdStatus" style="font-size:0.8rem; margin-top:0.5rem;"></div>
+    </div>
+
+    <!-- Theme section -->
+    <div class="card" style="margin-bottom:1.25rem;">
+      <h3 style="font-family:'Share Tech Mono',monospace; color:var(--accent); font-size:0.85rem; letter-spacing:1px; margin-bottom:1.25rem;">// GÖRÜNÜŞ</h3>
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div>
+          <p style="font-weight:600; margin-bottom:0.2rem;">Qaranlıq / Aydın Mod</p>
+          <p style="font-size:0.8rem; color:var(--text-secondary);">Cari: <span id="currentThemeTxt"></span></p>
+        </div>
+        <button class="theme-toggle" id="profileThemeToggle"></button>
+      </div>
+    </div>
+
+    <!-- Danger zone -->
+    <div class="card" style="border-color:rgba(255,0,85,0.3);">
+      <h3 style="font-family:'Share Tech Mono',monospace; color:var(--error); font-size:0.85rem; letter-spacing:1px; margin-bottom:1rem;">// TƏHLÜKƏLİ ZONA</h3>
+      <button class="btn btn-danger btn-sm" id="logoutAllBtn">Bütün Cihazlardan Çıx</button>
+    </div>`;
+
+  // Theme display
+  const updateThemeText = () => {
+    document.getElementById('currentThemeTxt').textContent = Theme.get() === 'dark' ? 'Qaranlıq' : 'Aydın';
+  };
+  updateThemeText();
+
+  document.getElementById('profileThemeToggle').onclick = () => {
+    Theme.toggle();
+    updateThemeText();
+  };
+
+  // Bio counter
+  document.getElementById('bioInput').oninput = (e) => {
+    document.getElementById('bioCount').textContent = `${e.target.value.length}/500`;
+  };
+
+  // Avatar upload
+  document.getElementById('avatarInput').onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const status = document.getElementById('avatarStatus');
+    status.innerHTML = '<span class="loader" style="width:14px;height:14px;border-width:2px;"></span>';
+
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    try {
+      const res = await API.post('/api/users/me/avatar', formData, true);
+      const data = await res.json();
+
+      if (res.ok) {
+        status.innerHTML = '<span style="color:var(--success);">✓ Avatar yeniləndi</span>';
+        const preview = document.getElementById('avatarPreview');
+        preview.innerHTML = `<img class="avatar" width="80" height="80" src="${CONFIG.API_URL}${data.avatarUrl}?t=${Date.now()}" style="width:80px;height:80px;">`;
+        // Update stored user
+        const u = Auth.getUser();
+        if (u) { u.avatarUrl = data.avatarUrl; localStorage.setItem('user', JSON.stringify(u)); }
+      } else {
+        status.innerHTML = `<span style="color:var(--error);">✗ ${data.error}</span>`;
+      }
+    } catch(err) {
+      status.innerHTML = '<span style="color:var(--error);">✗ Xəta baş verdi</span>';
+    }
+    e.target.value = '';
+  };
+
+  // Save bio
+  document.getElementById('saveBioBtn').onclick = async () => {
+    const bio = document.getElementById('bioInput').value;
+    const btn = document.getElementById('saveBioBtn');
+    const status = document.getElementById('bioStatus');
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader" style="width:12px;height:12px;border-width:2px;"></span>';
+
+    try {
+      const res = await API.put('/api/users/me', { bio });
+      const data = await res.json();
+      if (res.ok) {
+        status.innerHTML = '<span style="color:var(--success);">✓ Yadda saxlandı</span>';
+      } else {
+        status.innerHTML = `<span style="color:var(--error);">✗ ${data.error}</span>`;
+      }
+    } catch(e) {
+      status.innerHTML = '<span style="color:var(--error);">✗ Xəta</span>';
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Yadda Saxla';
+    setTimeout(() => { status.innerHTML = ''; }, 3000);
+  };
+
+  // Change password
+  document.getElementById('savePwdBtn').onclick = async () => {
+    const currentPwd = document.getElementById('currentPwd').value;
+    const newPwd = document.getElementById('newPwd').value;
+    const confirmPwd = document.getElementById('confirmPwd').value;
+    const btn = document.getElementById('savePwdBtn');
+    const status = document.getElementById('pwdStatus');
+
+    if (!currentPwd || !newPwd || !confirmPwd) {
+      status.innerHTML = '<span style="color:var(--error);">✗ Bütün xanaları doldurun</span>';
+      return;
+    }
+    if (newPwd !== confirmPwd) {
+      status.innerHTML = '<span style="color:var(--error);">✗ Şifrələr uyğun gəlmir</span>';
+      return;
+    }
+    if (newPwd.length < 6) {
+      status.innerHTML = '<span style="color:var(--error);">✗ Şifrə min 6 simvol olmalıdır</span>';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader" style="width:12px;height:12px;border-width:2px;"></span>';
+
+    try {
+      const res = await API.put('/api/users/me/password', { currentPassword: currentPwd, newPassword: newPwd });
+      const data = await res.json();
+      if (res.ok) {
+        status.innerHTML = '<span style="color:var(--success);">✓ Şifrə dəyişdirildi. Yenidən giriş edin.</span>';
+        setTimeout(() => {
+          Auth.clear();
+          window.location.href = 'login.html';
+        }, 2000);
+      } else {
+        status.innerHTML = `<span style="color:var(--error);">✗ ${data.error}</span>`;
+        btn.disabled = false;
+        btn.textContent = 'Şifrəni Yenilə';
+      }
+    } catch(e) {
+      status.innerHTML = '<span style="color:var(--error);">✗ Xəta</span>';
+      btn.disabled = false;
+      btn.textContent = 'Şifrəni Yenilə';
+    }
+  };
+
+  // Logout all
+  document.getElementById('logoutAllBtn').onclick = async () => {
+    if (!confirm('Bütün cihazlardan çıxmaq istəyirsiniz?')) return;
+    await API.post('/api/auth/logout', { refreshToken: Auth.getRefreshToken() });
+    Auth.clear();
+    window.location.href = 'index.html';
+  };
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  }
+})();
+</script>
+</body>
+</html>

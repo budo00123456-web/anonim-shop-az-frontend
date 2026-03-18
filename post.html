@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="az" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <title>Elan — ANONIM SHOP AZ</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+<div class="scanline-effect"></div>
+
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">
+    <span class="logo-bracket">[</span>ANONIM SHOP AZ<span class="logo-bracket">]</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">// FEED</a></li>
+    <li><a href="create.html">// PAYLAŞ</a></li>
+    <li><a href="messages.html">// MESAJLAR</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="theme-toggle" id="themeToggle"></button>
+    <div id="authArea"></div>
+  </div>
+</nav>
+
+<main class="main-content" style="margin-top:80px; max-width:900px; margin-left:auto; margin-right:auto;">
+
+  <div style="margin-bottom:1rem;">
+    <a href="index.html" style="color:var(--text-muted); font-size:0.85rem; text-decoration:none; font-family:'Share Tech Mono',monospace;">
+      ← FEED
+    </a>
+  </div>
+
+  <div id="postContainer">
+    <div class="page-loader"><div class="loader"></div><span>YÜKLƏNİR...</span></div>
+  </div>
+
+</main>
+
+<!-- Image lightbox -->
+<div id="lightbox" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:9999; display:none; align-items:center; justify-content:center; cursor:pointer;" onclick="closeLightbox()">
+  <img id="lightboxImg" style="max-width:90vw; max-height:90vh; object-fit:contain; border-radius:4px;">
+  <button onclick="closeLightbox()" style="position:absolute; top:1rem; right:1rem; background:rgba(255,255,255,0.1); border:none; color:#fff; font-size:1.5rem; width:40px; height:40px; border-radius:50%; cursor:pointer;">✕</button>
+</div>
+
+<script src="config.js"></script>
+<script>
+const myUser = Auth.getUser();
+document.getElementById('themeToggle').onclick = () => Theme.toggle();
+
+const authArea = document.getElementById('authArea');
+if (myUser) {
+  authArea.innerHTML = `<a href="profile.html" class="btn btn-ghost btn-sm">@${myUser.username}</a>`;
+} else {
+  authArea.innerHTML = `
+    <a href="login.html" class="btn btn-ghost btn-sm">GİRİŞ</a>
+    <a href="register.html" class="btn btn-primary btn-sm">QEYDIYYAT</a>`;
+}
+
+(async () => {
+  const params = new URLSearchParams(window.location.search);
+  const postId = params.get('id');
+
+  if (!postId || !/^[0-9a-f-]{36}$/.test(postId)) {
+    document.getElementById('postContainer').innerHTML = `
+      <div style="text-align:center; padding:4rem; color:var(--text-muted);">
+        <div style="font-size:3rem;">📭</div>
+        <p class="mono" style="margin-top:1rem;">// ELAN TAPILMADI</p>
+        <a href="index.html" class="btn btn-ghost btn-sm" style="margin-top:1rem;">← Geri</a>
+      </div>`;
+    return;
+  }
+
+  try {
+    const res = await API.get(`/api/posts/${postId}`);
+    if (!res) return;
+    const data = await res.json();
+
+    if (!res.ok) {
+      document.getElementById('postContainer').innerHTML = `
+        <div style="text-align:center; padding:4rem; color:var(--text-muted);">
+          <div style="font-size:3rem;">📭</div>
+          <p class="mono" style="margin-top:1rem;">// ${data.error || 'ELAN TAPILMADI'}</p>
+          <a href="index.html" class="btn btn-ghost btn-sm" style="margin-top:1rem;">← Geri</a>
+        </div>`;
+      return;
+    }
+
+    const post = data.post;
+    const isOwner = data.isOwner;
+
+    document.title = `${post.title} — ANONIM SHOP AZ`;
+
+    const price = post.price
+      ? `<span style="font-family:'Share Tech Mono',monospace; font-size:1.8rem; color:var(--accent); font-weight:bold;">${post.price} ${post.currency}</span>`
+      : `<span style="font-family:'Share Tech Mono',monospace; font-size:1.4rem; color:var(--success);">Pulsuz</span>`;
+
+    const authorSection = post.is_anonymous
+      ? `<div class="anon-badge" style="display:inline-block; padding:0.3rem 0.75rem; font-size:0.8rem;">🎭 ANONIM</div>`
+      : `<a href="user.html?u=${encodeURIComponent(post.username)}" style="text-decoration:none; display:inline-flex; align-items:center; gap:0.5rem;">
+           ${post.user_avatar
+             ? `<img class="avatar" width="28" height="28" src="${CONFIG.API_URL}${post.user_avatar}" alt="" style="width:28px;height:28px;">`
+             : `<div class="avatar-placeholder" style="width:28px;height:28px;font-size:0.65rem;">${post.username[0].toUpperCase()}</div>`
+           }
+           <span style="color:var(--accent); font-weight:600;">@${escapeHtml(post.username)}</span>
+         </a>`;
+
+    const categoryMap = {
+      general:'Ümumi', electronics:'Elektronika', clothing:'Geyim',
+      food:'Qida', services:'Xidmət', vehicles:'Nəqliyyat', property:'Əmlak', other:'Digər'
+    };
+
+    document.getElementById('postContainer').innerHTML = `
+      <div style="display:grid; grid-template-columns:1fr 340px; gap:1.5rem; align-items:start;">
+
+        <!-- Left: Images + Description -->
+        <div>
+          <!-- Image gallery -->
+          ${post.images?.length
+            ? `<div id="mainImageWrap" style="background:var(--bg-card); border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:0.75rem; cursor:pointer;" onclick="openLightbox(currentImg)">
+                 <img id="mainImage" src="${CONFIG.API_URL}${post.images[0]}" alt="${escapeHtml(post.title)}" style="width:100%; max-height:460px; object-fit:contain; display:block;">
+               </div>
+               ${post.images.length > 1
+                 ? `<div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.25rem;">
+                      ${post.images.map((img, i) => `
+                        <img src="${CONFIG.API_URL}${img}" onclick="setMainImage('${CONFIG.API_URL}${img}')"
+                          style="width:72px;height:72px;object-fit:cover;border-radius:4px;border:2px solid ${i===0?'var(--accent)':'var(--border)'};cursor:pointer;transition:border-color 0.2s;"
+                          class="thumb-img">`
+                      ).join('')}
+                    </div>`
+                 : ''
+               }`
+            : `<div style="background:var(--bg-card); border:1px solid var(--border); border-radius:8px; height:300px; display:flex; align-items:center; justify-content:center; font-size:4rem; margin-bottom:1.25rem; color:var(--text-muted);">📦</div>`
+          }
+
+          <!-- Description -->
+          ${post.description
+            ? `<div class="card" style="margin-bottom:1.25rem;">
+                 <h3 style="font-family:'Share Tech Mono',monospace; color:var(--accent); font-size:0.8rem; letter-spacing:1px; margin-bottom:0.75rem;">// AÇIQLAMA</h3>
+                 <p style="color:var(--text-secondary); line-height:1.7; white-space:pre-wrap;">${escapeHtml(post.description)}</p>
+               </div>`
+            : ''
+          }
+        </div>
+
+        <!-- Right: Details -->
+        <div style="position:sticky; top:80px;">
+          <div class="card" style="margin-bottom:1rem;">
+            <!-- Price -->
+            <div style="margin-bottom:1rem;">${price}</div>
+
+            <!-- Title -->
+            <h1 style="font-size:1.3rem; font-weight:700; margin-bottom:0.75rem; line-height:1.3;">${escapeHtml(post.title)}</h1>
+
+            <!-- Meta -->
+            <div style="display:flex; flex-direction:column; gap:0.4rem; margin-bottom:1rem; font-size:0.82rem; color:var(--text-secondary); font-family:'Share Tech Mono',monospace;">
+              <div>📂 ${categoryMap[post.category] || post.category}</div>
+              <div>👁 ${post.views || 0} baxış</div>
+              <div>🕐 ${formatDate(post.created_at)}</div>
+              ${post.status === 'sold' ? '<div style="color:var(--error);">✓ SATILDI</div>' : ''}
+            </div>
+
+            <!-- Author -->
+            <div style="border-top:1px solid var(--border); padding-top:0.75rem; margin-bottom:1rem;">
+              ${authorSection}
+            </div>
+
+            <!-- Action buttons -->
+            ${isOwner
+              ? `<div style="display:flex; flex-direction:column; gap:0.5rem;">
+                   <a href="edit-post.html?id=${post.id}" class="btn btn-secondary btn-block">✏️ Redaktə Et</a>
+                   <button class="btn btn-danger btn-block" onclick="deletePost('${post.id}')">🗑 Sil</button>
+                 </div>`
+              : post.is_anonymous
+                ? `<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; font-family:'Share Tech Mono',monospace; padding:0.5rem 0;">
+                     // Anonim elan - birbaşa əlaqə yoxdur
+                   </div>`
+                : `<a href="messages.html?with=${encodeURIComponent(post.username)}" class="btn btn-primary btn-block">
+                     💬 Mesaj Göndər
+                   </a>`
+            }
+          </div>
+
+          <!-- Share -->
+          <div class="card" style="font-size:0.8rem;">
+            <h4 style="font-family:'Share Tech Mono',monospace; color:var(--text-secondary); font-size:0.75rem; letter-spacing:1px; margin-bottom:0.5rem;">// PAYLAŞ</h4>
+            <button class="btn btn-ghost btn-sm btn-block" onclick="copyLink()">🔗 Linki Kopyala</button>
+          </div>
+        </div>
+      </div>`;
+
+    // Current image for lightbox
+    window.currentImg = post.images?.[0] ? `${CONFIG.API_URL}${post.images[0]}` : null;
+
+  } catch(e) {
+    console.error(e);
+    document.getElementById('postContainer').innerHTML = `
+      <div style="text-align:center; padding:4rem; color:var(--error);">// XƏTA BAŞ VERDİ</div>`;
+  }
+})();
+
+window.setMainImage = (src) => {
+  document.getElementById('mainImage').src = src;
+  window.currentImg = src;
+  document.querySelectorAll('.thumb-img').forEach(img => {
+    img.style.borderColor = img.src === src ? 'var(--accent)' : 'var(--border)';
+  });
+};
+
+window.openLightbox = (src) => {
+  if (!src) return;
+  const lb = document.getElementById('lightbox');
+  document.getElementById('lightboxImg').src = src;
+  lb.style.display = 'flex';
+};
+
+window.closeLightbox = () => {
+  document.getElementById('lightbox').style.display = 'none';
+};
+
+window.deletePost = async (id) => {
+  if (!confirm('Elanı silmək istəyirsiniz?')) return;
+  const res = await API.delete(`/api/posts/${id}`);
+  if (res?.ok) {
+    Toast.success('Elan silindi.');
+    setTimeout(() => window.location.href = 'index.html', 1000);
+  } else {
+    Toast.error('Silinə bilmədi.');
+  }
+};
+
+window.copyLink = () => {
+  navigator.clipboard.writeText(window.location.href).then(() => {
+    Toast.success('Link kopyalandı!');
+  });
+};
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+function formatDate(str) {
+  if (!str) return '';
+  return new Date(str).toLocaleDateString('az-AZ', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+</script>
+</body>
+</html>

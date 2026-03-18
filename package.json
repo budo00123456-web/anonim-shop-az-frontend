@@ -1,0 +1,10 @@
+{
+  "name": "anonim-shop-az-frontend",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "npx serve . -p ${PORT:-3001}"
+  },
+  "dependencies": {
+    "serve": "^14.2.1"
+  }
+}

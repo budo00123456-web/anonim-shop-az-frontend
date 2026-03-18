@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="az" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Anonim alver platforması - anonim şəkildə alış-veriş et">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>ANONIM SHOP AZ</title>
+  <link rel="stylesheet" href="main.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎭</text></svg>">
+</head>
+<body>
+
+<!-- Scanner effect -->
+<div class="scanline-effect"></div>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">
+    <span class="logo-bracket">[</span>
+    ANONIM SHOP AZ
+    <span class="logo-bracket">]</span>
+  </a>
+
+  <ul class="nav-links" id="navLinks">
+    <li><a href="index.html" class="active">// FEED</a></li>
+    <li><a href="create.html">// PAYLAŞ</a></li>
+    <li><a href="messages.html" id="messagesLink">// MESAJLAR <span id="navUnread" style="display:none" class="unread-count">0</span></a></li>
+  </ul>
+
+  <div class="nav-right">
+    <!-- Live users -->
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      <span class="mono" id="liveCount">0</span> online
+    </div>
+
+    <!-- Theme toggle -->
+    <button class="theme-toggle" id="themeToggle" title="Modu dəyiş" aria-label="Toggle theme"></button>
+
+    <!-- Auth buttons / User menu -->
+    <div id="authArea"></div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main-content" style="margin-top: 80px;">
+
+  <!-- Hero -->
+  <div style="margin-bottom: 2rem;">
+    <h1 class="glitch" data-text="ANONIM SHOP AZ" style="font-family: 'Share Tech Mono', monospace; font-size: 2rem; color: var(--accent); margin-bottom: 0.5rem;">
+      ANONIM SHOP AZ
+    </h1>
+    <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.25rem;">
+      Anonim alver platforması. Kimliyin gizli qalar.
+    </p>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <span class="stat-value mono" id="totalPosts">-</span>
+        <span class="stat-label">Elan</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value mono" id="onlineCount">-</span>
+        <span class="stat-label">Online</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters + Search -->
+  <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom:1.25rem;">
+    <div class="search-bar" style="flex:1; min-width:200px; max-width:380px;">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="searchInput" placeholder="Axtar..." autocomplete="off">
+    </div>
+    <button class="btn btn-primary" onclick="window.location.href='create.html'">+ ELAN VER</button>
+  </div>
+
+  <!-- Category chips -->
+  <div class="category-filters" id="categoryFilters">
+    <span class="category-chip active" data-cat="">HAMISI</span>
+    <span class="category-chip" data-cat="electronics">ELEKTRONİKA</span>
+    <span class="category-chip" data-cat="clothing">GEYİM</span>
+    <span class="category-chip" data-cat="food">QIDA</span>
+    <span class="category-chip" data-cat="services">XİDMƏT</span>
+    <span class="category-chip" data-cat="vehicles">NƏQLİYYAT</span>
+    <span class="category-chip" data-cat="property">ƏMLAk</span>
+    <span class="category-chip" data-cat="other">DİGƏR</span>
+  </div>
+
+  <!-- Posts -->
+  <div id="postsContainer">
+    <div class="page-loader">
+      <div class="loader"></div>
+      <span>YÜKLƏNİR...</span>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div id="pagination" style="display:flex; justify-content:center; gap:0.5rem; margin-top:2rem;"></div>
+
+</main>
+
+<!-- User dropdown template -->
+<template id="userMenuTpl">
+  <div style="position:relative;">
+    <button class="btn btn-secondary btn-sm" id="userMenuBtn" style="gap:0.5rem;">
+      <img id="navAvatar" class="avatar" width="24" height="24" alt="">
+      <span id="navUsername"></span> ▾
+    </button>
+    <div id="userDropdown" style="
+      display:none;
+      position:absolute;
+      top:calc(100% + 8px);
+      right:0;
+      background:var(--bg-card);
+      border:1px solid var(--border);
+      border-radius:6px;
+      padding:0.5rem;
+      min-width:160px;
+      z-index:1000;
+      box-shadow:var(--shadow);
+    ">
+      <a href="profile.html" class="conv-item" style="border:none; border-radius:4px; font-size:0.85rem;">👤 Profilim</a>
+      <a href="my-posts.html" class="conv-item" style="border:none; border-radius:4px; font-size:0.85rem;">📦 Elanlarım</a>
+      <a href="profile.html" class="conv-item" style="border:none; border-radius:4px; font-size:0.85rem;">⚙️ Ayarlar</a>
+      <hr style="border:none; border-top:1px solid var(--border); margin:0.25rem 0;">
+      <button id="logoutBtn" class="btn btn-danger btn-sm btn-block" style="margin-top:0.25rem;">Çıxış</button>
+    </div>
+  </div>
+</template>
+
+<script src="config.js"></script>
+<script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+<script>
+(async () => {
+  // Auth area
+  const authArea = document.getElementById('authArea');
+  const user = Auth.getUser();
+
+  if (user) {
+    const tpl = document.getElementById('userMenuTpl').content.cloneNode(true);
+    authArea.appendChild(tpl);
+    document.getElementById('navUsername').textContent = user.username;
+    const avatar = document.getElementById('navAvatar');
+    if (user.avatarUrl) {
+      avatar.src = `${CONFIG.API_URL}${user.avatarUrl}`;
+      avatar.onerror = () => { avatar.style.display='none'; };
+    } else {
+      avatar.style.display = 'none';
+    }
+
+    document.getElementById('userMenuBtn').onclick = () => {
+      const dd = document.getElementById('userDropdown');
+      dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+    };
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#userMenuBtn')) {
+        const dd = document.getElementById('userDropdown');
+        if (dd) dd.style.display = 'none';
+      }
+    });
+
+    document.getElementById('logoutBtn').onclick = async () => {
+      await API.post('/api/auth/logout', { refreshToken: Auth.getRefreshToken() });
+      Auth.clear();
+      window.location.reload();
+    };
+
+    // Unread count
+    const unreadRes = await API.get('/api/messages/unread/count');
+    if (unreadRes?.ok) {
+      const d = await unreadRes.json();
+      if (d.count > 0) {
+        document.getElementById('navUnread').textContent = d.count;
+        document.getElementById('navUnread').style.display = 'inline';
+      }
+    }
+  } else {
+    authArea.innerHTML = `
+      <a href="login.html" class="btn btn-ghost btn-sm">GİRİŞ</a>
+      <a href="register.html" class="btn btn-primary btn-sm">QEYDIYYAT</a>
+    `;
+  }
+
+  // Theme toggle
+  document.getElementById('themeToggle').onclick = () => {
+    Theme.toggle();
+  };
+
+  // Socket.io
+  const socket = io(CONFIG.SOCKET_URL, {
+    auth: { token: Auth.getAccessToken() || '' },
+    transports: ['websocket', 'polling'],
+  });
+
+  socket.on('liveCount', (count) => {
+    document.getElementById('liveCount').textContent = count;
+    document.getElementById('onlineCount').textContent = count;
+  });
+
+  // Posts
+  let currentPage = 1;
+  let currentCategory = '';
+  let searchTimeout;
+
+  const loadPosts = async (page = 1) => {
+    currentPage = page;
+    const container = document.getElementById('postsContainer');
+    container.innerHTML = `<div class="page-loader"><div class="loader"></div><span>YÜKLƏNİR...</span></div>`;
+
+    const search = document.getElementById('searchInput').value.trim();
+    let url = `/api/posts?page=${page}&limit=12`;
+    if (currentCategory) url += `&category=${currentCategory}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+
+    try {
+      const res = await API.get(url);
+      if (!res) return;
+      const data = await res.json();
+
+      document.getElementById('totalPosts').textContent = data.pagination?.total || 0;
+
+      if (!data.posts?.length) {
+        container.innerHTML = `
+          <div style="text-align:center; padding:4rem 1rem; color:var(--text-muted);">
+            <div style="font-size:3rem; margin-bottom:1rem;">📭</div>
+            <p class="mono">// ELAN TAPILMADI</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = `<div class="posts-grid">${data.posts.map(renderPost).join('')}</div>`;
+
+      renderPagination(data.pagination);
+    } catch (e) {
+      container.innerHTML = `<div class="page-loader" style="color:var(--error);">// XƏTA BAŞ VERDİ</div>`;
+    }
+  };
+
+  const renderPost = (post) => {
+    const img = post.images?.[0]
+      ? `<img class="post-image" src="${CONFIG.API_URL}${post.images[0]}" alt="${escapeHtml(post.title)}" loading="lazy">`
+      : `<div class="post-image-placeholder">📦</div>`;
+
+    const price = post.price
+      ? `<div class="post-price">${post.price} ${post.currency}</div>`
+      : `<div class="post-price free">Pulsuz</div>`;
+
+    const user = post.is_anonymous
+      ? `<span class="anon-badge">ANONIM</span>`
+      : `<span style="font-size:0.75rem; color:var(--text-secondary);">@${escapeHtml(post.username || '')}</span>`;
+
+    const date = new Date(post.created_at).toLocaleDateString('az-AZ');
+
+    return `
+      <a class="post-card" href="post.html?id=${post.id}">
+        ${img}
+        <div class="post-body">
+          <div class="post-title">${escapeHtml(post.title)}</div>
+          ${price}
+          <div class="post-meta">
+            ${user}
+            <span class="post-category">${post.category}</span>
+          </div>
+          <div style="font-size:0.7rem; color:var(--text-muted); margin-top:0.3rem;">${date}</div>
+        </div>
+      </a>`;
+  };
+
+  const renderPagination = (pag) => {
+    const el = document.getElementById('pagination');
+    if (!pag || pag.pages <= 1) { el.innerHTML = ''; return; }
+
+    let html = '';
+    if (currentPage > 1) html += `<button class="btn btn-ghost btn-sm" onclick="loadPosts(${currentPage-1})">‹</button>`;
+    for (let i = 1; i <= pag.pages; i++) {
+      if (i === currentPage) html += `<button class="btn btn-primary btn-sm">${i}</button>`;
+      else if (i === 1 || i === pag.pages || Math.abs(i - currentPage) <= 2) {
+        html += `<button class="btn btn-ghost btn-sm" onclick="loadPosts(${i})">${i}</button>`;
+      } else if (Math.abs(i - currentPage) === 3) {
+        html += `<span style="color:var(--text-muted); padding:0 0.25rem;">...</span>`;
+      }
+    }
+    if (currentPage < pag.pages) html += `<button class="btn btn-ghost btn-sm" onclick="loadPosts(${currentPage+1})">›</button>`;
+    el.innerHTML = html;
+  };
+
+  window.loadPosts = loadPosts;
+
+  // Category filter
+  document.getElementById('categoryFilters').onclick = (e) => {
+    const chip = e.target.closest('.category-chip');
+    if (!chip) return;
+    document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    currentCategory = chip.dataset.cat;
+    loadPosts(1);
+  };
+
+  // Search
+  document.getElementById('searchInput').oninput = () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => loadPosts(1), 400);
+  };
+
+  // XSS safe escape
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  }
+
+  loadPosts();
+})();
+</script>
+</body>
+</html>

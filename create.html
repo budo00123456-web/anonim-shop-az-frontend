@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="az" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <title>Elan Ver — ANONIM SHOP AZ</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+<div class="scanline-effect"></div>
+
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">
+    <span class="logo-bracket">[</span>ANONIM SHOP AZ<span class="logo-bracket">]</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">// FEED</a></li>
+    <li><a href="create.html" class="active">// PAYLAŞ</a></li>
+    <li><a href="messages.html">// MESAJLAR</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="theme-toggle" id="themeToggle"></button>
+    <div id="authArea"></div>
+  </div>
+</nav>
+
+<main class="main-content" style="margin-top:80px; max-width:680px; margin-left:auto; margin-right:auto;">
+
+  <div style="margin-bottom:1.75rem;">
+    <h1 style="font-family:'Share Tech Mono',monospace; color:var(--accent); font-size:1.2rem; letter-spacing:2px;">// YENİ ELAN</h1>
+    <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.25rem;">Məhsul və ya xidmətini paylaş</p>
+  </div>
+
+  <div class="card">
+    <form id="createForm" enctype="multipart/form-data">
+
+      <!-- Title -->
+      <div class="form-group">
+        <label class="form-label">Başlıq *</label>
+        <input type="text" id="title" class="form-input" placeholder="Nə satırsınız?" minlength="3" maxlength="200" required>
+        <div id="titleCount" style="font-size:0.7rem; color:var(--text-muted); text-align:right; margin-top:0.2rem;">0/200</div>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label class="form-label">Açıqlama</label>
+        <textarea class="form-textarea" id="description" maxlength="2000" placeholder="Ətraflı məlumat..." style="min-height:120px;"></textarea>
+        <div id="descCount" style="font-size:0.7rem; color:var(--text-muted); text-align:right; margin-top:0.2rem;">0/2000</div>
+      </div>
+
+      <!-- Price + Currency -->
+      <div style="display:grid; grid-template-columns:1fr auto; gap:0.75rem; margin-bottom:1.25rem;">
+        <div>
+          <label class="form-label">Qiymət</label>
+          <input type="number" id="price" class="form-input" placeholder="0.00" min="0" max="999999" step="0.01">
+        </div>
+        <div>
+          <label class="form-label">Valyuta</label>
+          <select id="currency" class="form-select">
+            <option value="AZN">AZN ₼</option>
+            <option value="USD">USD $</option>
+            <option value="EUR">EUR €</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Category -->
+      <div class="form-group">
+        <label class="form-label">Kateqoriya</label>
+        <select id="category" class="form-select">
+          <option value="general">Ümumi</option>
+          <option value="electronics">Elektronika</option>
+          <option value="clothing">Geyim</option>
+          <option value="food">Qida</option>
+          <option value="services">Xidmət</option>
+          <option value="vehicles">Nəqliyyat</option>
+          <option value="property">Əmlak</option>
+          <option value="other">Digər</option>
+        </select>
+      </div>
+
+      <!-- Images -->
+      <div class="form-group">
+        <label class="form-label">Şəkillər (max 5)</label>
+        <div class="upload-area" id="uploadArea">
+          <div style="font-size:2rem; margin-bottom:0.5rem;">📷</div>
+          <p style="font-size:0.85rem;">Şəkilləri buraya sürükləyin və ya klikləyin</p>
+          <p style="font-size:0.75rem; margin-top:0.25rem; font-family:'Share Tech Mono',monospace;">// JPEG · PNG · WebP · Max 5MB</p>
+          <input type="file" id="imagesInput" accept="image/jpeg,image/png,image/webp" multiple style="display:none;">
+        </div>
+        <div class="image-previews" id="imagePreviews"></div>
+      </div>
+
+      <!-- Anonymous toggle -->
+      <div class="form-group">
+        <div style="display:flex; align-items:center; justify-content:space-between; background:var(--bg-secondary); border:1px solid var(--border); border-radius:6px; padding:0.9rem 1rem;">
+          <div>
+            <p style="font-weight:600; margin-bottom:0.1rem;">Anonim Paylaş</p>
+            <p style="font-size:0.78rem; color:var(--text-secondary);">Adın gizli qalacaq</p>
+          </div>
+          <label style="position:relative; display:inline-block; width:48px; height:26px; cursor:pointer;">
+            <input type="checkbox" id="isAnonymous" checked style="opacity:0; position:absolute;">
+            <span id="anonToggle" style="
+              display:block; width:48px; height:26px; border-radius:13px;
+              background:var(--accent); transition:background 0.3s; position:relative;
+            ">
+              <span id="anonKnob" style="
+                position:absolute; top:3px; right:3px; width:20px; height:20px;
+                border-radius:50%; background:#000; transition:right 0.3s;
+              "></span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div id="errorMsg" style="display:none; background:rgba(255,0,85,0.1); border:1px solid var(--error); border-radius:4px; padding:0.6rem 0.9rem; color:var(--error); font-size:0.85rem; margin-bottom:1rem; font-family:'Share Tech Mono',monospace;"></div>
+
+      <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitBtn">
+        ELAN VER
+      </button>
+    </form>
+  </div>
+
+</main>
+
+<script src="config.js"></script>
+<script>
+if (!Auth.isLoggedIn()) { window.location.href = 'login.html'; }
+
+const myUser = Auth.getUser();
+document.getElementById('themeToggle').onclick = () => Theme.toggle();
+
+const authArea = document.getElementById('authArea');
+authArea.innerHTML = `<a href="profile.html" class="btn btn-ghost btn-sm">@${myUser?.username || ''}</a>`;
+
+// Counters
+document.getElementById('title').oninput = (e) => {
+  document.getElementById('titleCount').textContent = `${e.target.value.length}/200`;
+};
+document.getElementById('description').oninput = (e) => {
+  document.getElementById('descCount').textContent = `${e.target.value.length}/2000`;
+};
+
+// Anonymous toggle visual
+const anonCheckbox = document.getElementById('isAnonymous');
+const anonToggle = document.getElementById('anonToggle');
+const anonKnob = document.getElementById('anonKnob');
+
+const updateAnonToggle = () => {
+  if (anonCheckbox.checked) {
+    anonToggle.style.background = 'var(--accent)';
+    anonKnob.style.right = '3px';
+  } else {
+    anonToggle.style.background = 'var(--border)';
+    anonKnob.style.right = 'calc(100% - 23px)';
+  }
+};
+
+anonCheckbox.onclick = updateAnonToggle;
+updateAnonToggle();
+
+// Image upload
+let selectedFiles = [];
+
+const uploadArea = document.getElementById('uploadArea');
+const imagesInput = document.getElementById('imagesInput');
+
+uploadArea.onclick = () => imagesInput.click();
+
+uploadArea.ondragover = (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); };
+uploadArea.ondragleave = () => uploadArea.classList.remove('dragover');
+uploadArea.ondrop = (e) => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+  handleFiles(Array.from(e.dataTransfer.files));
+};
+
+imagesInput.onchange = (e) => handleFiles(Array.from(e.target.files));
+
+function handleFiles(files) {
+  const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+  const valid = files.filter(f => allowed.includes(f.type) && f.size <= 5 * 1024 * 1024);
+
+  if (valid.length < files.length) {
+    document.getElementById('errorMsg').textContent = '// Bəzi fayllar rədd edildi (yalnız JPEG/PNG/WebP, max 5MB)';
+    document.getElementById('errorMsg').style.display = 'block';
+    setTimeout(() => { document.getElementById('errorMsg').style.display = 'none'; }, 3000);
+  }
+
+  selectedFiles = [...selectedFiles, ...valid].slice(0, 5);
+  renderPreviews();
+}
+
+function renderPreviews() {
+  const container = document.getElementById('imagePreviews');
+  container.innerHTML = '';
+  selectedFiles.forEach((file, idx) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = 'position:relative; width:80px; height:80px;';
+      wrapper.innerHTML = `
+        <img src="${e.target.result}" style="width:80px;height:80px;object-fit:cover;border-radius:4px;border:1px solid var(--border);">
+        <button onclick="removeImage(${idx})" style="
+          position:absolute;top:-6px;right:-6px;width:20px;height:20px;
+          background:var(--error);border:none;border-radius:50%;
+          color:#fff;font-size:0.7rem;cursor:pointer;
+          display:flex;align-items:center;justify-content:center;
+        ">✕</button>`;
+      container.appendChild(wrapper);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById('uploadArea').style.display = selectedFiles.length >= 5 ? 'none' : '';
+}
+
+window.removeImage = (idx) => {
+  selectedFiles.splice(idx, 1);
+  renderPreviews();
+};
+
+// Submit
+document.getElementById('createForm').onsubmit = async (e) => {
+  e.preventDefault();
+
+  const title = document.getElementById('title').value.trim();
+  const description = document.getElementById('description').value.trim();
+  const price = document.getElementById('price').value;
+  const currency = document.getElementById('currency').value;
+  const category = document.getElementById('category').value;
+  const isAnonymous = document.getElementById('isAnonymous').checked;
+  const btn = document.getElementById('submitBtn');
+  const errMsg = document.getElementById('errorMsg');
+
+  if (!title) {
+    errMsg.textContent = '// Başlıq tələb olunur.';
+    errMsg.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader" style="width:16px;height:16px;border-width:2px;"></span> GÖNDƏRİLİR...';
+  errMsg.style.display = 'none';
+
+  const formData = new FormData();
+  formData.append('title', title);
+  if (description) formData.append('description', description);
+  if (price) formData.append('price', price);
+  formData.append('currency', currency);
+  formData.append('category', category);
+  formData.append('isAnonymous', isAnonymous);
+  selectedFiles.forEach(file => formData.append('images', file));
+
+  try {
+    const res = await API.post('/api/posts', formData, true);
+    const data = await res.json();
+
+    if (res.ok) {
+      window.location.href = `post.html?id=${data.post.id}`;
+    } else {
+      errMsg.textContent = `// ${data.error || 'Elan yaradıla bilmədi.'}`;
+      errMsg.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'ELAN VER';
+    }
+  } catch(err) {
+    errMsg.textContent = '// Server xətası. Yenidən cəhd et.';
+    errMsg.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'ELAN VER';
+  }
+};
+</script>
+</body>
+</html>

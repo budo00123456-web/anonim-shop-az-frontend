@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="az" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <title>Elanlarım — ANONIM SHOP AZ</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+<div class="scanline-effect"></div>
+
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">
+    <span class="logo-bracket">[</span>ANONIM SHOP AZ<span class="logo-bracket">]</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">// FEED</a></li>
+    <li><a href="create.html">// PAYLAŞ</a></li>
+    <li><a href="messages.html">// MESAJLAR</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="theme-toggle" id="themeToggle"></button>
+    <a href="profile.html" class="btn btn-ghost btn-sm">← Profil</a>
+  </div>
+</nav>
+
+<main class="main-content" style="margin-top:80px;">
+
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:1.75rem;">
+    <div>
+      <h1 style="font-family:'Share Tech Mono',monospace; color:var(--accent); font-size:1.2rem; letter-spacing:2px;">// ELANLARIM</h1>
+      <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.2rem;" id="postsCount"></p>
+    </div>
+    <a href="create.html" class="btn btn-primary">+ YENİ ELAN</a>
+  </div>
+
+  <!-- Filter tabs -->
+  <div class="category-filters" id="statusFilters" style="margin-bottom:1.5rem;">
+    <span class="category-chip active" data-status="">HAMISI</span>
+    <span class="category-chip" data-status="active">AKTİV</span>
+    <span class="category-chip" data-status="sold">SATILDI</span>
+    <span class="category-chip" data-status="hidden">GİZLİ</span>
+  </div>
+
+  <div id="postsContainer">
+    <div class="page-loader"><div class="loader"></div></div>
+  </div>
+
+</main>
+
+<script src="config.js"></script>
+<script>
+if (!Auth.isLoggedIn()) window.location.href = 'login.html';
+
+document.getElementById('themeToggle').onclick = () => Theme.toggle();
+
+let allPosts = [];
+let currentStatus = '';
+
+(async () => {
+  try {
+    const res = await API.get('/api/posts/user/my');
+    if (!res) return;
+    const data = await res.json();
+    allPosts = data.posts || [];
+    renderPosts();
+  } catch(e) {
+    document.getElementById('postsContainer').innerHTML =
+      `<div style="color:var(--error); font-family:'Share Tech Mono',monospace; padding:1rem;">// XƏTA</div>`;
+  }
+
+  document.getElementById('statusFilters').onclick = (e) => {
+    const chip = e.target.closest('.category-chip');
+    if (!chip) return;
+    document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    currentStatus = chip.dataset.status;
+    renderPosts();
+  };
+})();
+
+function renderPosts() {
+  const filtered = currentStatus ? allPosts.filter(p => p.status === currentStatus) : allPosts;
+  document.getElementById('postsCount').textContent = `${filtered.length} elan`;
+
+  const container = document.getElementById('postsContainer');
+
+  if (!filtered.length) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:4rem; color:var(--text-muted);">
+        <div style="font-size:3rem;">📭</div>
+        <p class="mono" style="margin-top:1rem;">// ELAN YOX</p>
+        <a href="create.html" class="btn btn-primary btn-sm" style="margin-top:1rem;">+ Elan Ver</a>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div style="display:flex; flex-direction:column; gap:0.75rem;">
+      ${filtered.map(post => {
+        const img = post.images?.[0]
+          ? `<img src="${CONFIG.API_URL}${post.images[0]}" alt="" style="width:80px;height:80px;object-fit:cover;border-radius:6px;flex-shrink:0;">`
+          : `<div style="width:80px;height:80px;background:var(--bg-secondary);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;color:var(--text-muted);">📦</div>`;
+
+        const statusColors = { active:'var(--success)', sold:'var(--info)', hidden:'var(--text-muted)' };
+        const statusLabels = { active:'AKTİV', sold:'SATILDI', hidden:'GİZLİ' };
+
+        return `
+          <div class="card" style="display:flex; align-items:center; gap:1rem; padding:0.9rem 1.1rem;">
+            <a href="post.html?id=${post.id}">${img}</a>
+            <div style="flex:1; min-width:0;">
+              <a href="post.html?id=${post.id}" style="text-decoration:none; color:var(--text-primary); font-weight:600; font-size:0.95rem; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(post.title)}</a>
+              <div style="display:flex; align-items:center; gap:0.75rem; margin-top:0.3rem; flex-wrap:wrap;">
+                ${post.price ? `<span style="font-family:'Share Tech Mono',monospace; color:var(--accent); font-size:0.9rem;">${post.price} ${post.currency}</span>` : '<span style="color:var(--success); font-size:0.85rem;">Pulsuz</span>'}
+                <span style="font-size:0.75rem; color:var(--text-muted); font-family:'Share Tech Mono',monospace;">👁 ${post.views || 0}</span>
+                <span style="font-size:0.7rem; color:var(--text-muted); font-family:'Share Tech Mono',monospace;">${formatDate(post.created_at)}</span>
+                ${post.is_anonymous ? '<span class="anon-badge" style="font-size:0.65rem;">ANONIM</span>' : ''}
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.5rem; flex-shrink:0;">
+              <span style="font-family:'Share Tech Mono',monospace; font-size:0.7rem; color:${statusColors[post.status] || 'var(--text-muted)'};">
+                ${statusLabels[post.status] || post.status}
+              </span>
+              <a href="post.html?id=${post.id}" class="btn btn-ghost btn-sm btn-icon" title="Bax">👁</a>
+              <button class="btn btn-danger btn-sm btn-icon" onclick="deletePost('${post.id}', this)" title="Sil">🗑</button>
+            </div>
+          </div>`;
+      }).join('')}
+    </div>`;
+}
+
+window.deletePost = async (id, btn) => {
+  if (!confirm('Bu elanı silmək istəyirsiniz?')) return;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader" style="width:12px;height:12px;border-width:2px;"></span>';
+
+  const res = await API.delete(`/api/posts/${id}`);
+  if (res?.ok) {
+    allPosts = allPosts.filter(p => p.id !== id);
+    renderPosts();
+    Toast.success('Elan silindi.');
+  } else {
+    btn.disabled = false;
+    btn.textContent = '🗑';
+    Toast.error('Silinə bilmədi.');
+  }
+};
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+function formatDate(str) {
+  return new Date(str).toLocaleDateString('az-AZ', { day: '2-digit', month: '2-digit', year: '2-digit' });
+}
+</script>
+</body>
+</html>

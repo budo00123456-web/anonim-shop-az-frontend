@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="az" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <title>Profil — ANONIM SHOP AZ</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+<div class="scanline-effect"></div>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">
+    <span class="logo-bracket">[</span>ANONIM SHOP AZ<span class="logo-bracket">]</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">// FEED</a></li>
+    <li><a href="create.html">// PAYLAŞ</a></li>
+    <li><a href="messages.html">// MESAJLAR</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      <span class="mono" id="liveCount">0</span> online
+    </div>
+    <button class="theme-toggle" id="themeToggle"></button>
+    <div id="authArea"></div>
+  </div>
+</nav>
+
+<main class="main-content" style="margin-top:80px; max-width:900px; margin-left:auto; margin-right:auto;">
+
+  <div id="profileContainer">
+    <div class="page-loader"><div class="loader"></div><span>YÜKLƏNİR...</span></div>
+  </div>
+
+</main>
+
+<script src="config.js"></script>
+<script>
+(async () => {
+  document.getElementById('themeToggle').onclick = () => Theme.toggle();
+
+  const myUser = Auth.getUser();
+  const authArea = document.getElementById('authArea');
+  if (myUser) {
+    authArea.innerHTML = `<a href="profile.html" class="btn btn-ghost btn-sm">@${myUser.username}</a>`;
+  } else {
+    authArea.innerHTML = `
+      <a href="login.html" class="btn btn-ghost btn-sm">GİRİŞ</a>
+      <a href="register.html" class="btn btn-primary btn-sm">QEYDIYYAT</a>`;
+  }
+
+  // Get username from URL
+  const params = new URLSearchParams(window.location.search);
+  const username = params.get('u');
+  if (!username) {
+    // If no param, check if logged in and show own profile
+    if (myUser) {
+      window.location.href = `user.html?u=${myUser.username}`;
+    } else {
+      window.location.href = 'login.html';
+    }
+    return;
+  }
+
+  try {
+    const res = await fetch(`${CONFIG.API_URL}/api/users/${encodeURIComponent(username)}`);
+    if (!res.ok) {
+      document.getElementById('profileContainer').innerHTML = `
+        <div style="text-align:center; padding:4rem; color:var(--text-muted);">
+          <div style="font-size:3rem; margin-bottom:1rem;">👤</div>
+          <p class="mono">// İSTİFADƏÇİ TAPILMADI</p>
+          <a href="index.html" class="btn btn-ghost btn-sm" style="margin-top:1rem;">← Geri</a>
+        </div>`;
+      return;
+    }
+
+    const data = await res.json();
+    const user = data.user;
+    const isOwnProfile = myUser && myUser.id === user.id;
+
+    document.title = `@${user.username} — ANONIM SHOP AZ`;
+
+    // Render profile
+    document.getElementById('profileContainer').innerHTML = `
+      <!-- Profile Header -->
+      <div class="card" style="margin-bottom:1.5rem;">
+        <div style="display:flex; align-items:flex-start; gap:1.5rem; flex-wrap:wrap;">
+          <!-- Avatar -->
+          <div style="position:relative; flex-shrink:0;">
+            ${user.avatar_url
+              ? `<img class="avatar" width="90" height="90" src="${CONFIG.API_URL}${user.avatar_url}" alt="@${escapeHtml(user.username)}" style="width:90px;height:90px;">`
+              : `<div class="avatar-placeholder" style="width:90px;height:90px;font-size:2rem;">${user.username[0].toUpperCase()}</div>`
+            }
+            ${user.is_online ? '<span style="width:14px;height:14px;background:var(--success);border-radius:50%;position:absolute;bottom:2px;right:2px;border:3px solid var(--bg-card);"></span>' : ''}
+          </div>
+
+          <!-- Info -->
+          <div style="flex:1; min-width:0;">
+            <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; margin-bottom:0.5rem;">
+              <h1 style="font-family:'Share Tech Mono',monospace; font-size:1.4rem; color:var(--accent);">@${escapeHtml(user.username)}</h1>
+              ${user.is_verified ? '<span style="background:rgba(0,170,255,0.15); border:1px solid #00aaff; color:#00aaff; border-radius:4px; padding:0.1rem 0.4rem; font-size:0.7rem; font-family:\'Share Tech Mono\',monospace;">✓ VERİFİED</span>' : ''}
+              ${user.is_online
+                ? '<span style="color:var(--success); font-size:0.8rem; font-family:\'Share Tech Mono\',monospace;">● Online</span>'
+                : '<span style="color:var(--text-muted); font-size:0.75rem; font-family:\'Share Tech Mono\',monospace;">' + formatLastSeen(user.last_seen) + '</span>'
+              }
+            </div>
+
+            ${user.bio ? `<p style="color:var(--text-secondary); font-size:0.95rem; margin-bottom:0.75rem;">${escapeHtml(user.bio)}</p>` : ''}
+
+            <div style="display:flex; gap:1.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+              <div class="stat-item">
+                <span class="stat-value mono" style="font-size:1.1rem;">${user.postCount || 0}</span>
+                <span class="stat-label" style="font-size:0.7rem;">Elan</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value mono" style="font-size:1.1rem;">${formatDate(user.created_at)}</span>
+                <span class="stat-label" style="font-size:0.7rem;">Qoşulub</span>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+              ${isOwnProfile
+                ? `<a href="profile.html" class="btn btn-secondary btn-sm">✏️ Profili Redaktə Et</a>`
+                : `<a href="messages.html?with=${encodeURIComponent(user.username)}" class="btn btn-primary btn-sm">💬 Mesaj Göndər</a>`
+              }
+              <a href="index.html?search=${encodeURIComponent('@' + user.username)}" class="btn btn-ghost btn-sm">📦 Bütün Elanlar</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Posts -->
+      <div>
+        <h2 style="font-family:'Share Tech Mono',monospace; color:var(--accent); font-size:0.9rem; letter-spacing:2px; margin-bottom:1rem;">
+          // AKTİV ELANLAR
+        </h2>
+        <div id="userPosts">
+          <div class="page-loader" style="height:100px;"><div class="loader"></div></div>
+        </div>
+      </div>`;
+
+    // Load user posts
+    loadUserPosts(user.username);
+
+  } catch(e) {
+    document.getElementById('profileContainer').innerHTML = `
+      <div style="text-align:center; padding:4rem; color:var(--error);">// XƏTA BAŞ VERDİ</div>`;
+  }
+
+  async function loadUserPosts(username) {
+    try {
+      const res = await fetch(`${CONFIG.API_URL}/api/posts/user/${encodeURIComponent(username)}`);
+      const data = await res.json();
+      const container = document.getElementById('userPosts');
+
+      if (!data.posts?.length) {
+        container.innerHTML = `<div style="text-align:center; padding:2rem; color:var(--text-muted); font-family:'Share Tech Mono',monospace; font-size:0.8rem;">// ELAN YOX</div>`;
+        return;
+      }
+
+      container.innerHTML = `<div class="posts-grid">${data.posts.map(post => {
+        const img = post.images?.[0]
+          ? `<img class="post-image" src="${CONFIG.API_URL}${post.images[0]}" alt="${escapeHtml(post.title)}" loading="lazy">`
+          : `<div class="post-image-placeholder">📦</div>`;
+        const price = post.price
+          ? `<div class="post-price">${post.price} ${post.currency}</div>`
+          : `<div class="post-price free">Pulsuz</div>`;
+
+        return `
+          <a class="post-card" href="post.html?id=${post.id}">
+            ${img}
+            <div class="post-body">
+              <div class="post-title">${escapeHtml(post.title)}</div>
+              ${price}
+              <div class="post-meta">
+                <span class="post-category">${post.category}</span>
+                <span style="font-size:0.7rem; color:var(--text-muted);">👁 ${post.views || 0}</span>
+              </div>
+            </div>
+          </a>`;
+      }).join('')}</div>`;
+    } catch(e) {
+      document.getElementById('userPosts').innerHTML = `<div style="color:var(--error); font-size:0.8rem; font-family:'Share Tech Mono',monospace; padding:1rem;">// Elanlar yüklənə bilmədi</div>`;
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  }
+
+  function formatDate(str) {
+    return new Date(str).toLocaleDateString('az-AZ', { year: 'numeric', month: 'short' });
+  }
+
+  function formatLastSeen(str) {
+    if (!str) return '';
+    const d = new Date(str);
+    const diff = Date.now() - d;
+    if (diff < 3600000) return `${Math.floor(diff/60000)}d əvvəl`;
+    if (diff < 86400000) return `${Math.floor(diff/3600000)}s əvvəl`;
+    return d.toLocaleDateString('az-AZ');
+  }
+})();
+</script>
+</body>
+</html>
