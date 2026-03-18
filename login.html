@@ -5,74 +5,232 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta http-equiv="X-Frame-Options" content="DENY">
-  <title>Giriş — ANONIM SHOP AZ</title>
+  <title>Mesajlar — ANONIM SHOP AZ</title>
   <link rel="stylesheet" href="main.css">
+  <style>
+    body { overflow: hidden; }
+    .main-content { padding: 0; margin-top: 60px; height: calc(100vh - 60px); max-width: 100%; }
+  </style>
 </head>
 <body>
 <div class="scanline-effect"></div>
-<div style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:1.5rem;">
-  <div style="width:100%; max-width:420px;">
-    <div style="text-align:center; margin-bottom:2rem;">
-      <a href="index.html" style="font-family:'Share Tech Mono',monospace; font-size:1.4rem; color:var(--accent); text-decoration:none; letter-spacing:3px;">[ANONIM SHOP AZ]</a>
-      <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.5rem; font-family:'Share Tech Mono',monospace;">// ACCESS TERMINAL</p>
-    </div>
-    <div class="card" style="padding:2rem;">
-      <div style="margin-bottom:1.75rem;">
-        <h2 style="font-family:'Share Tech Mono',monospace; color:var(--accent); font-size:1rem; letter-spacing:2px; margin-bottom:0.25rem;">GİRİŞ</h2>
-        <p style="color:var(--text-secondary); font-size:0.85rem;">Hesabına daxil ol</p>
+<nav class="navbar">
+  <a href="index.html" class="nav-logo"><span class="logo-bracket">[</span>ANONIM SHOP AZ<span class="logo-bracket">]</span></a>
+  <button class="hamburger" id="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('mobile-open')"><span></span><span></span><span></span></button>
+  <ul class="nav-links">
+    <li><a href="index.html">// FEED</a></li>
+    <li><a href="create.html">// PAYLAŞ</a></li>
+    <li><a href="messages.html" class="active">// MESAJLAR</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="live-badge"><div class="live-dot"></div><span class="mono" id="liveCount">0</span> online</div>
+    <button class="theme-toggle" id="themeToggle"></button>
+    <div id="authArea"></div>
+  </div>
+</nav>
+<main class="main-content">
+  <div class="chat-container">
+    <div class="chat-sidebar" id="chatSidebar">
+      <div style="padding:0.9rem 1rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-family:'Share Tech Mono',monospace; font-size:0.8rem; color:var(--accent); letter-spacing:1px;">MESAJLAR</span>
+        <button class="btn btn-secondary btn-sm" id="newChatBtn">+ YENİ</button>
       </div>
-      <form id="loginForm" autocomplete="off">
-        <div class="form-group">
-          <label class="form-label">Username</label>
-          <input type="text" id="username" class="form-input" placeholder="username_az" autocomplete="username" maxlength="32" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Şifrə</label>
-          <div style="position:relative;">
-            <input type="password" id="password" class="form-input" placeholder="••••••••" autocomplete="current-password" maxlength="128" required>
-            <button type="button" id="togglePwd" style="position:absolute; right:0.75rem; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:1rem;">👁</button>
-          </div>
-        </div>
-        <div id="errorMsg" style="display:none; background:rgba(255,0,85,0.1); border:1px solid var(--error); border-radius:4px; padding:0.6rem 0.9rem; color:var(--error); font-size:0.85rem; margin-bottom:1rem; font-family:'Share Tech Mono',monospace;"></div>
-        <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitBtn">GİRİŞ ET</button>
-      </form>
-      <div style="text-align:center; margin-top:1.5rem; color:var(--text-secondary); font-size:0.85rem;">
-        Hesabın yoxdur? <a href="register.html" style="color:var(--accent); text-decoration:none; font-weight:600;">Qeydiyyat</a>
+      <div id="convList" style="flex:1; overflow-y:auto;">
+        <div class="page-loader" style="height:80px;"><div class="loader"></div></div>
       </div>
     </div>
-    <div style="text-align:center; margin-top:1rem;">
-      <a href="index.html" style="color:var(--text-muted); font-size:0.8rem; text-decoration:none; font-family:'Share Tech Mono',monospace;">← ANA SƏHİFƏYƏ QAYIT</a>
+    <div class="chat-main" id="chatMain">
+      <div style="flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:1rem; color:var(--text-muted);">
+        <div style="font-size:3rem;">💬</div>
+        <p class="mono" style="font-size:0.85rem;">// SÖHBƏT SEÇİN</p>
+      </div>
     </div>
-    <div style="text-align:center; margin-top:1rem;">
-      <button class="theme-toggle" id="themeToggle" title="Modu dəyiş"></button>
+  </div>
+</main>
+<div class="modal-overlay" id="newChatModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">YENİ SÖHBƏT</span>
+      <button class="btn btn-ghost btn-sm btn-icon" id="closeModal">✕</button>
     </div>
+    <div class="form-group">
+      <label class="form-label">Username Axtar</label>
+      <input type="text" id="searchUser" class="form-input" placeholder="username_az" autocomplete="off">
+    </div>
+    <div id="searchResults"></div>
   </div>
 </div>
 <script src="config.js"></script>
+<script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
 <script>
-  if (Auth.isLoggedIn()) window.location.href = 'index.html';
+if (!Auth.isLoggedIn()) window.location.href = 'login.html';
+const myUser = Auth.getUser();
+let currentPartner = null;
+let socket;
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.hamburger') && !e.target.closest('.nav-links'))
+    document.querySelector('.nav-links')?.classList.remove('mobile-open');
+});
+(async () => {
   document.getElementById('themeToggle').onclick = () => Theme.toggle();
-  document.getElementById('togglePwd').onclick = () => {
-    const input = document.getElementById('password');
-    input.type = input.type === 'password' ? 'text' : 'password';
+  document.getElementById('authArea').innerHTML = `<a href="profile.html" class="btn btn-ghost btn-sm">@${myUser?.username}</a>`;
+  socket = io(CONFIG.SOCKET_URL, { auth: { token: Auth.getAccessToken() }, transports: ['websocket', 'polling'] });
+  socket.on('liveCount', (c) => { document.getElementById('liveCount').textContent = c; });
+  socket.on('newMessage', async (data) => {
+    if (currentPartner && data.senderId === currentPartner.id) await loadMessages(currentPartner.username, false);
+    loadConversations();
+  });
+  await loadConversations();
+  const params = new URLSearchParams(window.location.search);
+  const withUser = params.get('with');
+  if (withUser) openChat(withUser);
+  document.getElementById('newChatBtn').onclick = () => { document.getElementById('newChatModal').classList.add('active'); document.getElementById('searchUser').focus(); };
+  document.getElementById('closeModal').onclick = () => document.getElementById('newChatModal').classList.remove('active');
+  document.getElementById('newChatModal').onclick = (e) => { if (e.target === document.getElementById('newChatModal')) document.getElementById('newChatModal').classList.remove('active'); };
+  let searchTimeout;
+  document.getElementById('searchUser').oninput = (e) => {
+    clearTimeout(searchTimeout);
+    const q = e.target.value.trim();
+    if (q.length < 2) { document.getElementById('searchResults').innerHTML = ''; return; }
+    searchTimeout = setTimeout(() => searchUsers(q), 400);
   };
-  document.getElementById('loginForm').onsubmit = async (e) => {
-    e.preventDefault();
-    const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value;
-    const btn = document.getElementById('submitBtn');
-    const errMsg = document.getElementById('errorMsg');
-    if (!username || !password) { errMsg.textContent = '// Username və şifrə tələb olunur.'; errMsg.style.display = 'block'; return; }
-    btn.disabled = true;
-    btn.innerHTML = '<span class="loader" style="width:16px;height:16px;border-width:2px;"></span> GİRİŞ...';
-    errMsg.style.display = 'none';
-    try {
-      const res = await fetch(`${CONFIG.API_URL}/api/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
-      const data = await res.json();
-      if (res.ok) { Auth.setTokens(data.accessToken, data.refreshToken, data.user); window.location.href = 'index.html'; }
-      else { errMsg.textContent = `// ${data.error || 'Giriş uğursuz oldu.'}`; errMsg.style.display = 'block'; btn.disabled = false; btn.textContent = 'GİRİŞ ET'; }
-    } catch (error) { errMsg.textContent = '// Server xətası. Yenidən cəhd et.'; errMsg.style.display = 'block'; btn.disabled = false; btn.textContent = 'GİRİŞ ET'; }
-  };
+})();
+async function loadConversations() {
+  try {
+    const res = await API.get('/api/messages/conversations');
+    if (!res) return;
+    const data = await res.json();
+    const list = document.getElementById('convList');
+    if (!data.conversations?.length) { list.innerHTML = `<div style="text-align:center; padding:2rem; color:var(--text-muted); font-size:0.8rem; font-family:'Share Tech Mono',monospace;">// SÖHBƏT YOX</div>`; return; }
+    list.innerHTML = data.conversations.map(c => {
+      const active = currentPartner?.username === c.partner_username ? 'active' : '';
+      const lastMsg = c.last_message_type === 'image' ? '📷 Şəkil' : escapeHtml(c.last_message || '');
+      const time = c.last_message_time ? formatTime(c.last_message_time) : '';
+      const unread = c.unread_count > 0 ? `<span class="unread-count">${c.unread_count}</span>` : '';
+      return `<a class="conv-item ${active}" onclick="openChat('${escapeHtml(c.partner_username)}'); return false;" href="#">
+        <div style="position:relative; flex-shrink:0;">
+          ${c.partner_avatar ? `<img class="avatar" width="38" height="38" src="${CONFIG.API_URL}${c.partner_avatar}" alt="">` : `<div class="avatar-placeholder" style="width:38px;height:38px;font-size:0.9rem;">${c.partner_username[0].toUpperCase()}</div>`}
+          ${c.partner_online ? '<span style="width:8px;height:8px;background:var(--success);border-radius:50%;position:absolute;bottom:0;right:0;border:2px solid var(--bg-card);"></span>' : ''}
+        </div>
+        <div class="conv-info">
+          <div class="conv-name">@${escapeHtml(c.partner_username)}</div>
+          <div class="conv-last">${lastMsg}</div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:0.2rem; flex-shrink:0;">
+          <span style="font-size:0.65rem; color:var(--text-muted); font-family:'Share Tech Mono',monospace;">${time}</span>
+          ${unread}
+        </div>
+      </a>`;
+    }).join('');
+  } catch(e) { console.error(e); }
+}
+async function openChat(username) {
+  const chatMain = document.getElementById('chatMain');
+  chatMain.innerHTML = `<div class="page-loader"><div class="loader"></div></div>`;
+  try {
+    const res = await API.get(`/api/messages/${username}`);
+    if (!res) return;
+    const data = await res.json();
+    if (!res.ok) { chatMain.innerHTML = `<div class="page-loader" style="color:var(--error);">// ${data.error}</div>`; return; }
+    currentPartner = data.partner;
+    document.getElementById('newChatModal').classList.remove('active');
+    loadConversations();
+    chatMain.innerHTML = `
+      <div class="chat-header">
+        <div style="position:relative; flex-shrink:0;">
+          ${data.partner.avatar_url ? `<img class="avatar" width="36" height="36" src="${CONFIG.API_URL}${data.partner.avatar_url}" alt="">` : `<div class="avatar-placeholder" style="width:36px;height:36px;font-size:0.85rem;">${data.partner.username[0].toUpperCase()}</div>`}
+        </div>
+        <div><a href="user.html?u=${data.partner.username}" style="font-weight:700; color:var(--text-primary); text-decoration:none;">@${escapeHtml(data.partner.username)}</a></div>
+        <div style="margin-left:auto;"><button class="btn btn-ghost btn-sm btn-icon" onclick="loadMessages('${data.partner.username}', true)">↻</button></div>
+      </div>
+      <div class="messages-list" id="messagesList"></div>
+      <div class="chat-input-area">
+        <label class="btn btn-ghost btn-sm btn-icon" title="Şəkil göndər" style="cursor:pointer;">📎<input type="file" id="imgInput" accept="image/*" style="display:none;"></label>
+        <textarea class="chat-input" id="msgInput" placeholder="Mesaj yaz..." rows="1" maxlength="2000"></textarea>
+        <button class="btn btn-primary btn-sm" onclick="sendMessage()">↑</button>
+      </div>`;
+    renderMessages(data.messages);
+    document.getElementById('msgInput').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+    document.getElementById('msgInput').addEventListener('input', (e) => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'; });
+    document.getElementById('imgInput').onchange = async (e) => { const file = e.target.files[0]; if (!file) return; await sendImage(file); e.target.value = ''; };
+  } catch(err) { chatMain.innerHTML = `<div class="page-loader" style="color:var(--error);">// XƏTA</div>`; }
+}
+async function loadMessages(username, scrollToBottom = true) {
+  try {
+    const res = await API.get(`/api/messages/${username}`);
+    if (!res) return;
+    const data = await res.json();
+    renderMessages(data.messages, scrollToBottom);
+    loadConversations();
+  } catch(e) {}
+}
+function renderMessages(messages, scroll = true) {
+  const list = document.getElementById('messagesList');
+  if (!list) return;
+  if (!messages?.length) { list.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:2rem; font-family:'Share Tech Mono',monospace; font-size:0.8rem;">// MESAJ YOX</div>`; return; }
+  list.innerHTML = messages.map(m => {
+    const isSent = m.sender_id === myUser?.id;
+    const time = formatTime(m.created_at);
+    let content = '';
+    if (m.message_type === 'image' || m.image_url) {
+      content = `<img src="${CONFIG.API_URL}${m.image_url}" alt="img" style="max-width:200px; border-radius:6px; display:block;" onclick="window.open(this.src)">`;
+      if (m.content) content += `<p style="margin-top:0.25rem; font-size:0.85rem;">${escapeHtml(m.content)}</p>`;
+    } else { content = escapeHtml(m.content || '').replace(/\n/g, '<br>'); }
+    return `<div style="display:flex; flex-direction:column; align-items:${isSent ? 'flex-end' : 'flex-start'};">
+      <div class="message-bubble ${isSent ? 'sent' : 'received'}">${content}</div>
+      <div class="message-time">${time}${isSent && m.is_read ? ' ✓✓' : ''}</div>
+    </div>`;
+  }).join('');
+  if (scroll) list.scrollTop = list.scrollHeight;
+}
+async function sendMessage() {
+  if (!currentPartner) return;
+  const input = document.getElementById('msgInput');
+  const content = input.value.trim();
+  if (!content) return;
+  input.value = ''; input.style.height = 'auto';
+  try {
+    const res = await API.post(`/api/messages/${currentPartner.username}`, { content });
+    if (!res) return;
+    const data = await res.json();
+    if (res.ok) { socket.emit('sendMessageNotify', { receiverId: currentPartner.id, messageId: data.message.id }); await loadMessages(currentPartner.username, true); loadConversations(); }
+    else { Toast.error(data.error || 'Göndərilmədi.'); input.value = content; }
+  } catch(e) { Toast.error('Göndərmə xətası.'); }
+}
+async function sendImage(file) {
+  if (!currentPartner) return;
+  const formData = new FormData();
+  formData.append('image', file);
+  try {
+    const res = await API.post(`/api/messages/${currentPartner.username}/image`, formData, true);
+    if (!res) return;
+    const data = await res.json();
+    if (res.ok) { socket.emit('sendMessageNotify', { receiverId: currentPartner.id, messageId: data.message.id }); await loadMessages(currentPartner.username, true); }
+    else Toast.error(data.error || 'Şəkil göndərilmədi.');
+  } catch(e) { Toast.error('Şəkil göndərmə xətası.'); }
+}
+async function searchUsers(q) {
+  try {
+    const res = await API.get(`/api/users/search/query?q=${encodeURIComponent(q)}`);
+    if (!res) return;
+    const data = await res.json();
+    const container = document.getElementById('searchResults');
+    if (!data.users?.length) { container.innerHTML = `<p style="color:var(--text-muted); font-size:0.8rem; font-family:'Share Tech Mono',monospace; padding:0.5rem 0;">// İstifadəçi tapılmadı</p>`; return; }
+    container.innerHTML = data.users.map(u => `
+      <div class="conv-item" onclick="openChat('${escapeHtml(u.username)}'); document.getElementById('newChatModal').classList.remove('active');" style="cursor:pointer; border-radius:4px;">
+        ${u.avatar_url ? `<img class="avatar" width="32" height="32" src="${CONFIG.API_URL}${u.avatar_url}" alt="">` : `<div class="avatar-placeholder" style="width:32px;height:32px;font-size:0.8rem;">${u.username[0].toUpperCase()}</div>`}
+        <div><div style="font-weight:600;">@${escapeHtml(u.username)}</div>${u.is_online ? '<div style="font-size:0.7rem; color:var(--success);">● Online</div>' : ''}</div>
+      </div>`).join('');
+  } catch(e) {}
+}
+function escapeHtml(str) { if (!str) return ''; return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+function formatTime(dateStr) {
+  const d = new Date(dateStr), now = new Date(), diff = now - d;
+  if (diff < 60000) return 'İndi';
+  if (diff < 3600000) return `${Math.floor(diff/60000)}d`;
+  if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString('az-AZ', {hour:'2-digit',minute:'2-digit'});
+  return d.toLocaleDateString('az-AZ', {day:'2-digit',month:'2-digit'});
+}
 </script>
 </body>
 </html>
