@@ -13,16 +13,18 @@
 </head>
 <body>
 
-<!-- Scanner effect -->
 <div class="scanline-effect"></div>
 
-<!-- NAVBAR -->
 <nav class="navbar">
   <a href="index.html" class="nav-logo">
     <span class="logo-bracket">[</span>
     ANONIM SHOP AZ
     <span class="logo-bracket">]</span>
   </a>
+
+  <button class="hamburger" id="hamburger" onclick="document.getElementById('navLinks').classList.toggle('mobile-open')">
+    <span></span><span></span><span></span>
+  </button>
 
   <ul class="nav-links" id="navLinks">
     <li><a href="index.html" class="active">// FEED</a></li>
@@ -31,24 +33,17 @@
   </ul>
 
   <div class="nav-right">
-    <!-- Live users -->
     <div class="live-badge">
       <div class="live-dot"></div>
       <span class="mono" id="liveCount">0</span> online
     </div>
-
-    <!-- Theme toggle -->
     <button class="theme-toggle" id="themeToggle" title="Modu dəyiş" aria-label="Toggle theme"></button>
-
-    <!-- Auth buttons / User menu -->
     <div id="authArea"></div>
   </div>
 </nav>
 
-<!-- MAIN -->
 <main class="main-content" style="margin-top: 80px;">
 
-  <!-- Hero -->
   <div style="margin-bottom: 2rem;">
     <h1 class="glitch" data-text="ANONIM SHOP AZ" style="font-family: 'Share Tech Mono', monospace; font-size: 2rem; color: var(--accent); margin-bottom: 0.5rem;">
       ANONIM SHOP AZ
@@ -68,7 +63,6 @@
     </div>
   </div>
 
-  <!-- Filters + Search -->
   <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom:1.25rem;">
     <div class="search-bar" style="flex:1; min-width:200px; max-width:380px;">
       <span class="search-icon">⌕</span>
@@ -77,7 +71,6 @@
     <button class="btn btn-primary" onclick="window.location.href='create.html'">+ ELAN VER</button>
   </div>
 
-  <!-- Category chips -->
   <div class="category-filters" id="categoryFilters">
     <span class="category-chip active" data-cat="">HAMISI</span>
     <span class="category-chip" data-cat="electronics">ELEKTRONİKA</span>
@@ -89,7 +82,6 @@
     <span class="category-chip" data-cat="other">DİGƏR</span>
   </div>
 
-  <!-- Posts -->
   <div id="postsContainer">
     <div class="page-loader">
       <div class="loader"></div>
@@ -97,35 +89,21 @@
     </div>
   </div>
 
-  <!-- Pagination -->
   <div id="pagination" style="display:flex; justify-content:center; gap:0.5rem; margin-top:2rem;"></div>
 
 </main>
 
-<!-- User dropdown template -->
 <template id="userMenuTpl">
   <div style="position:relative;">
     <button class="btn btn-secondary btn-sm" id="userMenuBtn" style="gap:0.5rem;">
       <img id="navAvatar" class="avatar" width="24" height="24" alt="">
       <span id="navUsername"></span> ▾
     </button>
-    <div id="userDropdown" style="
-      display:none;
-      position:absolute;
-      top:calc(100% + 8px);
-      right:0;
-      background:var(--bg-card);
-      border:1px solid var(--border);
-      border-radius:6px;
-      padding:0.5rem;
-      min-width:160px;
-      z-index:1000;
-      box-shadow:var(--shadow);
-    ">
-      <a href="profile.html" class="conv-item" style="border:none; border-radius:4px; font-size:0.85rem;">👤 Profilim</a>
-      <a href="my-posts.html" class="conv-item" style="border:none; border-radius:4px; font-size:0.85rem;">📦 Elanlarım</a>
-      <a href="profile.html" class="conv-item" style="border:none; border-radius:4px; font-size:0.85rem;">⚙️ Ayarlar</a>
-      <hr style="border:none; border-top:1px solid var(--border); margin:0.25rem 0;">
+    <div id="userDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:0.5rem;min-width:160px;z-index:1000;box-shadow:var(--shadow);">
+      <a href="profile.html" class="conv-item" style="border:none;border-radius:4px;font-size:0.85rem;">👤 Profilim</a>
+      <a href="my-posts.html" class="conv-item" style="border:none;border-radius:4px;font-size:0.85rem;">📦 Elanlarım</a>
+      <a href="profile.html" class="conv-item" style="border:none;border-radius:4px;font-size:0.85rem;">⚙️ Ayarlar</a>
+      <hr style="border:none;border-top:1px solid var(--border);margin:0.25rem 0;">
       <button id="logoutBtn" class="btn btn-danger btn-sm btn-block" style="margin-top:0.25rem;">Çıxış</button>
     </div>
   </div>
@@ -134,8 +112,14 @@
 <script src="config.js"></script>
 <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
 <script>
+// Close hamburger menu when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.hamburger') && !e.target.closest('.nav-links')) {
+    document.getElementById('navLinks')?.classList.remove('mobile-open');
+  }
+});
+
 (async () => {
-  // Auth area
   const authArea = document.getElementById('authArea');
   const user = Auth.getUser();
 
@@ -168,7 +152,6 @@
       window.location.reload();
     };
 
-    // Unread count
     const unreadRes = await API.get('/api/messages/unread/count');
     if (unreadRes?.ok) {
       const d = await unreadRes.json();
@@ -184,12 +167,8 @@
     `;
   }
 
-  // Theme toggle
-  document.getElementById('themeToggle').onclick = () => {
-    Theme.toggle();
-  };
+  document.getElementById('themeToggle').onclick = () => Theme.toggle();
 
-  // Socket.io
   const socket = io(CONFIG.SOCKET_URL, {
     auth: { token: Auth.getAccessToken() || '' },
     transports: ['websocket', 'polling'],
@@ -200,7 +179,6 @@
     document.getElementById('onlineCount').textContent = count;
   });
 
-  // Posts
   let currentPage = 1;
   let currentCategory = '';
   let searchTimeout;
@@ -232,7 +210,6 @@
       }
 
       container.innerHTML = `<div class="posts-grid">${data.posts.map(renderPost).join('')}</div>`;
-
       renderPagination(data.pagination);
     } catch (e) {
       container.innerHTML = `<div class="page-loader" style="color:var(--error);">// XƏTA BAŞ VERDİ</div>`;
@@ -243,27 +220,20 @@
     const img = post.images?.[0]
       ? `<img class="post-image" src="${CONFIG.API_URL}${post.images[0]}" alt="${escapeHtml(post.title)}" loading="lazy">`
       : `<div class="post-image-placeholder">📦</div>`;
-
     const price = post.price
       ? `<div class="post-price">${post.price} ${post.currency}</div>`
       : `<div class="post-price free">Pulsuz</div>`;
-
-    const user = post.is_anonymous
+    const userBadge = post.is_anonymous
       ? `<span class="anon-badge">ANONIM</span>`
       : `<span style="font-size:0.75rem; color:var(--text-secondary);">@${escapeHtml(post.username || '')}</span>`;
-
     const date = new Date(post.created_at).toLocaleDateString('az-AZ');
-
     return `
       <a class="post-card" href="post.html?id=${post.id}">
         ${img}
         <div class="post-body">
           <div class="post-title">${escapeHtml(post.title)}</div>
           ${price}
-          <div class="post-meta">
-            ${user}
-            <span class="post-category">${post.category}</span>
-          </div>
+          <div class="post-meta">${userBadge}<span class="post-category">${post.category}</span></div>
           <div style="font-size:0.7rem; color:var(--text-muted); margin-top:0.3rem;">${date}</div>
         </div>
       </a>`;
@@ -272,16 +242,14 @@
   const renderPagination = (pag) => {
     const el = document.getElementById('pagination');
     if (!pag || pag.pages <= 1) { el.innerHTML = ''; return; }
-
     let html = '';
     if (currentPage > 1) html += `<button class="btn btn-ghost btn-sm" onclick="loadPosts(${currentPage-1})">‹</button>`;
     for (let i = 1; i <= pag.pages; i++) {
       if (i === currentPage) html += `<button class="btn btn-primary btn-sm">${i}</button>`;
-      else if (i === 1 || i === pag.pages || Math.abs(i - currentPage) <= 2) {
+      else if (i === 1 || i === pag.pages || Math.abs(i - currentPage) <= 2)
         html += `<button class="btn btn-ghost btn-sm" onclick="loadPosts(${i})">${i}</button>`;
-      } else if (Math.abs(i - currentPage) === 3) {
+      else if (Math.abs(i - currentPage) === 3)
         html += `<span style="color:var(--text-muted); padding:0 0.25rem;">...</span>`;
-      }
     }
     if (currentPage < pag.pages) html += `<button class="btn btn-ghost btn-sm" onclick="loadPosts(${currentPage+1})">›</button>`;
     el.innerHTML = html;
@@ -289,7 +257,6 @@
 
   window.loadPosts = loadPosts;
 
-  // Category filter
   document.getElementById('categoryFilters').onclick = (e) => {
     const chip = e.target.closest('.category-chip');
     if (!chip) return;
@@ -299,13 +266,11 @@
     loadPosts(1);
   };
 
-  // Search
   document.getElementById('searchInput').oninput = () => {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => loadPosts(1), 400);
   };
 
-  // XSS safe escape
   function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
